@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+$0 = File.join(File.dirname($0), 'puppet')
+
+require 'ruby-prof'
+RubyProf.start
+
+begin
+  require 'puppet/util/command_line'
+  Puppet::Util::CommandLine.new.execute
+ensure
+  result = RubyProf.stop
+
+  calltree = RubyProf::CallTreePrinter.new(result)
+
+  puppet_version = %x{git describe}.chomp
+
+  calltree_output = "puppet-#{puppet_version}-#{Time.now.to_f}.profile"
+
+  puts "Writing calltree file to #{calltree_output}"
+  File.open(calltree_output, 'w') do |fh|
+    calltree.print(fh)
+  end
+end
